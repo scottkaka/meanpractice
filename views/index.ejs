@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html ng-app="mapApp">
+<% include header %>
+<body>
+
+
+<!-- Input part starts here -->
+
+<div class="container-fluid">
+    <div style="padding: 20px;" class="row service-container">
+        <div class="col-lg-12 col-md-12 col-xs-12">
+        <h2>
+            How to use
+        </h2>
+        <p>
+            Select an Area on the map to see the Top crop Data
+        </p>
+    </div>
+    </div>
+    <div class="row content" style="height:100%">
+        <div class="col-sm-7">
+                <div class="col-lg-12 col-md-12 col-xs-12">
+                    <div ng-controller="BarCtrl">
+                        <div class="form-group">
+                            <div style="padding: 0px;" class="col-lg-12 col-xs-12 well" >
+                                <div id="map-canvas">
+                                    google map
+                                    <my-maps id="map-canvas"></my-maps>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div class="col-sm-5">
+            <!--<div class="row">-->
+                <div class="col-lg-12 col-md-12 col-xs-12">
+                    <div class="">
+                        <div class="form-group">
+                            <div style="padding: 0px;" class="col-lg-12 col-xs-12">
+                                <div ng-controller="BarCtrl" ng-hide="dataCtrlFlag">
+                                    <div class="produceChart text-center well"  id="barChart">
+                                        <label>Acres of harvest in the region</label>
+                                        <canvas id="bar" class="chart chart-bar"
+                                                chart-data="dataBar" chart-labels="labelsBar" chart-series="series">
+                                        </canvas>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row content" style="height:100%">
+        <div class="col-sm-12"  ng-controller="BarCtrl" >
+            <div class="row"ng-hide="barCtrlFlag">
+                <div class="row text-center" style="padding: 20px;">
+                    <button ng-repeat="produce in producesBar" class="button" ng-click="selectChart($index)"> {{ produce.name }}</button>
+                </div>
+                <div class="row col-lg-12 col-md-12 col-xs-12">
+                    <div class="">
+                        <div class="form-group row">
+                            <div style="padding: 0px;" class="col-lg-12 col-xs-12">
+                                <div ng-show="selected" class="well" id="lineChart">
+                                    <label>Price trend of {{name}}</label>
+                                    <br>
+                                    <label> measured in {{unit}}</label>
+                                    <canvas class="chart chart-line priceChart" chart-data="dataLine"
+                                            chart-labels="year" chart-legend="false" chart-series="name">
+                                    </canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,427 @@
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=egde">
+    <meta name="viewport" http-equiv="Content-Type"
+          content="text/html; charset=UTF-8"
+          content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
+          href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link href="/images/favicon.ico" rel="shortcut icon" type="image/x-icon">
+    <link href="/images/favicon.ico" rel="icon" type="image/x-icon">
+    <link href="/stylesheets/style1.css" rel="stylesheet" type="text/css">
+    <link href="/stylesheets/style1.css" rel="stylesheet" type="text/css">
+    <link href="/stylesheets/banner.css" rel="stylesheet" type="text/css">
+    <link href="/stylesheets/watson-bootstrap-dark.css" rel="stylesheet" type="text/css">
+    <script
+            src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+    <script type="text/javascript"
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCL9kCGzu4TIVuotYsHHHhFrCpIlT2y1I4"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
+
+    <!-- for angular chart js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/angular.chartjs/0.8.8/angular-chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/angular.chartjs/0.8.8/angular-chart.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Signika:700,400' rel='stylesheet' type='text/css'>
+    <style>
+        /* Set height of the grid so .sidenav can be 100% (adjust if needed) */
+        .row.content {
+            height: 1500px
+        }
+        /* Set gray background color and 100% height */
+        .sidenav {
+            background-color: #f1f1f1;
+            height: 100%;
+        }
+        /* Set black background color, white text and some padding */
+        footer {
+            background-color: #555;
+            color: white;
+            padding: 15px;
+        }
+        /* On small screens, set height to 'auto' for sidenav and grid */
+        @media screen and (max-width: 767px) {
+            .sidenav {
+                height: auto;
+                padding: 15px;
+            }
+            .row.content {
+                height: auto;
+            }
+        }
+    </style>
+    <script>
+        var produce = [];
+        var mapApp = angular.module("mapApp", ["chart.js"]);
+        mapApp.directive("myMaps", function () {
+            return {
+                controller: 'BarCtrl',
+                restrict: 'E',
+                template: '<div myMaps callback-fn="mapSelect(arg1)"></div>',
+                replace: true,
+                link: function (scope, element, attrs) {
+                    var myLatLng = new google.maps.LatLng(44.49234205613122, -99.55810546875);
+                    var minZoomLevel = 11;
+                    var mapOptions = {
+                        center: myLatLng,
+                        zoom: minZoomLevel,
+                        zoomControl: true,
+                        zoomControlOptions: {
+                            style: google.maps.ZoomControlStyle.SMALL
+                        },
+                        mapTypeId: google.maps.MapTypeId.HYBRID,
+                        draggableCursor: 'crosshair',
+                        draggingCursor: 'move'
+                    };
+                    var map = new google.maps.Map(document.getElementById(attrs.id), mapOptions);
+                    var geocoder = new google.maps.Geocoder;
+                    var infowindow = new google.maps.InfoWindow;
+
+                    // Bounds for North America
+                    // Constructs a rectangle from the points at its south-west and north-east corners.
+                    var strictBounds = new google.maps.LatLngBounds(
+                            new google.maps.LatLng(28.70, -127.50),
+                            new google.maps.LatLng(48.85, -55.90)
+                    );
+
+                    // Put a marker on SJSU
+                    var marker = new google.maps.Marker({
+                        map: map,
+                        draggable: true,
+                        animation: google.maps.Animation.DROP,
+                        position: myLatLng
+                    });
+                    // call getCountyName(myLatLng.latitude, myLatLng.longitude)
+
+                    // default address
+                    //infowindow.setContent(" SJSU, San Jose, CA 95192");
+                    //infowindow.open(map, marker);
+
+                    var circle = new google.maps.Circle({
+                        map: map,
+                        radius: 3 * (1609.34),    // in metres
+                        fillColor: '#00FF00',
+                        strokeWeight: 1
+                    });
+                    //scope.mapSelect(myLatLng.lat(), myLatLng.lng());
+                    getTopCrops(myLatLng.lat(), myLatLng.lng());
+                    circle.bindTo('center', marker, 'position');
+
+                    function getTopCrops(obj1, obj2,first){
+                        if(first != false)
+                                first = true;
+                        scope.mapSelect(obj1, obj2,first);
+                    }
+
+                    // move the marker on click events
+                    google.maps.event.addListener(map, 'click', function (event) {
+                        marker.setPosition(event.latLng);
+                        circle.setCenter(event.latLng);
+                        //getAjax();
+                        // call getCountyName(event.latLng.latitude, event.latLng.longitude)
+                        //scope.mapSelect(event.latLng.lat(), event.latLng.lng());
+                        getTopCrops(event.latLng.lat(), event.latLng.lng(),false)
+                        // reverse geocode
+                        geocoder.geocode({'location': event.latLng}, function (results, status) {
+                            if (status === google.maps.GeocoderStatus.OK) {
+                                if (results[1]) {
+                                    infowindow.setContent(results[1].formatted_address);
+                                    infowindow.open(map, marker);
+                                } else {
+                                    window.alert('No results found');
+                                }
+                            } else {
+                                window.alert('Geocoder failed due to: ' + status);
+                            }
+                        });
+                    });
+
+                    // if the marker is dragged, reset the address
+                    google.maps.event.addListener(marker, 'dragend', function () {
+
+                        // call getCountyName(marker.getPosition().latitude, marker.getPosition().longitude)
+                        // reverse geocode
+                        geocoder.geocode({'location': marker.getPosition()}, function (results, status) {
+                            if (status === google.maps.GeocoderStatus.OK) {
+                                if (results[1]) {
+                                    getTopCrops(marker.getPosition().lat(), marker.getPosition().lng(),false)
+                                    infowindow.setContent(results[1].formatted_address);
+                                } else {
+                                    infowindow.setContent(marker.getPosition().toString())
+                                }
+                            } else {
+                                window.alert('Geocoder failed due to: ' + status);
+                            }
+                        });
+                    });
+
+                    // Listen for the dragend event
+                    google.maps.event.addListener(map, 'dragend', function () {
+                        if (strictBounds.contains(map.getCenter())) return;
+
+                        // We're out of bounds - Move the map back within the bounds
+                        var c = map.getCenter(),
+                                x = c.lng(),
+                                y = c.lat(),
+                                maxX = strictBounds.getNorthEast().lng(),
+                                maxY = strictBounds.getNorthEast().lat(),
+                                minX = strictBounds.getSouthWest().lng(),
+                                minY = strictBounds.getSouthWest().lat();
+
+                        if (x < minX) x = minX;
+                        if (x > maxX) x = maxX;
+                        if (y < minY) y = minY;
+                        if (y > maxY) y = maxY;
+
+                        map.setCenter(new google.maps.LatLng(y, x));
+                    });
+
+                }
+            };
+        });
+
+        //arc bar chart
+
+        mapApp.controller("BarCtrl", function ($rootScope, $http) {
+            $rootScope.barCtrlFlag = true;
+//
+            $rootScope.dataCtrlFlag = true;
+            /*
+            $http.get('/getData').success(function (data) {
+                console.log(produce);
+                //JSON.parse(data);
+                produce = data;
+                $rootScope.produces = data;
+                $rootScope.labelsBar = [];
+                var arcArr =[];
+                $rootScope.dataBar = [];
+
+                for(i=0;i<produce.length;i++) {
+                    $rootScope.labelsBar.push(produce[i].name) ;    
+                    console.log("labels bar values"+$rootScope.labelsBar);
+                    arcArr.push(data[i].arc);
+                }
+                $rootScope.dataBar.push(arcArr);
+                console.log("rootScope.dataBar"+$rootScope.dataBar);
+                $rootScope.barCtrlFlag=false;
+                $rootScope.dataCtrlFlag=false;
+                $rootScope.dataHasLoaded = true;
+
+
+
+                //line chard
+                $rootScope.producesBar = data;
+
+            }).error(function (data) {
+                // log error
+            });
+            */
+            $rootScope.mapSelect = function (obj1, obj2,first) {
+                var path = '/getData?lat='+obj1+'&long='+obj2
+                $http.get(path).success(function (data) {
+                    //JSON.parse(data);
+                    produce = data;
+                    $rootScope.produces = data;
+                    $rootScope.labelsBar = [];
+                    var arcArr =[];
+                    $rootScope.dataBar = [];
+
+                    for(i=0;i<produce.length;i++) {
+                        $rootScope.labelsBar.push(produce[i].name) ;
+                        console.log("labels bar values"+$rootScope.labelsBar);
+                        arcArr.push(data[i].arc);
+                    }
+                    $rootScope.dataBar.push(arcArr);
+                    console.log("rootScope.dataBar"+$rootScope.dataBar);
+                    $rootScope.barCtrlFlag=false;
+                    $rootScope.dataCtrlFlag=false;
+                    $rootScope.dataHasLoaded = true;
+
+
+
+                    //line chard
+                    $rootScope.producesBar = data;
+
+                    if(data[0])
+                    {
+                        $rootScope.selected = true;
+                        var array = [];
+                        array.push($rootScope.produces[0].price);
+                        $rootScope.dataLine = array;
+                        $rootScope.year =  $rootScope.produces[0].year;
+                        $rootScope.name =  $rootScope.produces[0].name;
+                        $rootScope.unit =  $rootScope.produces[0].unit;
+                    }
+
+                }).error(function (data) {
+                    // log error
+                });
+            }//closing map select function
+
+            $rootScope.selected = false;
+
+
+            $rootScope.selectChart = function(index) {
+                $rootScope.selected = true;
+                var array = [];
+                array.push($rootScope.produces[index].price);
+                $rootScope.dataLine = array;
+                $rootScope.year =  $rootScope.produces[index].year;
+                $rootScope.name =  $rootScope.produces[index].name;
+                $rootScope.unit =  $rootScope.produces[index].unit;
+            }
+        });
+
+    </script>
+
+    <style>
+        #map-canvas {
+            height: 400px;
+            width: 100%;
+            /*border: 2px solid black;*/
+        }
+
+        .produceChart {
+            height: 400px;
+            width: 100%;
+            padding-bottom: 0;
+            margin-bottom:15px;
+            /*border: 2px solid black;*/
+        }
+
+        .produceChkbox {
+            /*height: 400px;*/
+            /*width: 100%;*/
+            padding-left: 80%;
+            /*border: 2px solid black;*/
+        }
+
+        .priceChart {
+            margin-top: 10px;
+            height: 300px;
+            width: 100%;
+            /*border: 2px solid black;*/
+        }
+
+        body {
+            margin: 10px 10px 10px 10px;
+            font-family: 'Signika', sans-serif;
+            font-weight: 400;
+        }
+
+        .col-xs-15,
+        .col-sm-15,
+        .col-md-15,
+        .col-lg-15 {
+            position: relative;
+            min-height: 1px;
+            padding-right: 10px;
+            padding-left: 10px;
+        }
+
+        head{
+            font-family: 'Signika', sans-serif;
+            font-weight: 700;
+        }
+
+        .col-xs-15 {
+            width: 20%;
+            float: left;
+        }
+
+        @media (min-width: 768px) {
+            .col-sm-15 {
+                width: 20%;
+                float: left;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .col-md-15 {
+                width: 20%;
+                float: left;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .col-lg-15 {
+                width: 20%;
+                float: left;
+            }
+        }
+
+        input[type=checkbox]
+        { display:none; } /* to hide the checkbox itself */
+        input[type=checkbox] + label:before
+        {
+            font-family: FontAwesome;
+            display: inline-block;
+        }
+
+        input[type=checkbox] + label:before
+        { content: "\f096"; } /* unchecked icon */
+        input[type=checkbox] + label:before
+        { letter-spacing: 10px; } /* space between checkbox and label */
+
+        input[type=checkbox]:checked + label:before
+        { content: "\f046"; } /* checked icon */
+        input[type=checkbox]:checked + label:before
+        { letter-spacing: 5px; } /* allow space for check mark */
+
+        .button {
+            background-color: #325c80;
+
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            /*float: center;*/
+            border-radius: 8px;
+            margin: 5px 5px 5px 5px;
+
+        }
+
+        .button:hover {
+            background-color: #325c60;
+        }
+
+        .button:active {
+            background-color: #325c60;
+            box-shadow: 0 5px #666;
+            /*transform: translateY(4px);*/
+        }
+
+
+    </style>
+    <div class="row service-container" style="margin-left: 5px; margin-right: 5px;">
+        <div class="col-lg-12 service-header">
+            <div class="row header">
+                <div class="container">
+                    <div
+                            class="avatar img-container col-lg-2 col-md-2 col-sm-2 hidden-xs">
+                        <img src="images/app.png" class="service-icon">
+                    </div>
+                    <div
+                            class="col-lg-10 col-md-10 col-sm-10 col-xs-12 dialog-description">
+                        <h1 style="font-size: 50px;" class="service-title">
+                            Smart Farm
+                        </h1>
+                        <p>
+                            SmartFarm assists farmers to find popular crops for specific regions in the USA.</p>
+                         <p>
+                            Utilizing statistics and data provided by USDA National Agricultural Statistics Service (NASS) and Google maps, SmartFarm displays crops that have been harvested the most and their price lists.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</head>
