@@ -28,6 +28,18 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/angular.chartjs/0.8.8/angular-chart.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
     <link href='https://fonts.googleapis.com/css?family=Signika:700,400' rel='stylesheet' type='text/css'>
+
+    <script type="text/javascript"
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBicWfhk5LhPT1VyHXH-QUC8itYedrgnOk&libraries=geometry">
+    </script>
+
+
+
+
+
+
+
+
     <style>
         /* Set height of the grid so .sidenav can be 100% (adjust if needed) */
         .row.content {
@@ -419,9 +431,57 @@
                          <p>
                             Utilizing statistics and data provided by USDA National Agricultural Statistics Service (NASS) and Google maps, SmartFarm displays crops that have been harvested the most and their price lists.
                         </p>
+                            </div>
+                    <div>
+                        <span>google map js
+                            <div id="map" style="width:500px; height:500px"></div>
+
+                        </span>
+                        </div>
+
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </head>
+
+<script>
+    function initMap() {
+      var myLatLng = {lat: -25.363, lng: 131.044};
+//        var secLatLng = {lat: -25.367, lng: 131.045};
+
+        var markers=[{lat: -25.363, lng: 131.044},{lat: -25.367, lng: 131.045}];
+
+
+        // Create a map object and specify the DOM element for display.
+        var map = new google.maps.Map(document.getElementById('map'), {
+            center: myLatLng,
+            scrollwheel: true,
+            zoom: 18
+        });
+
+        // Create a marker and set its position.
+        for(var i=0; i< markers.length; i++){
+            addMarer(markers[i]);
+        }
+        function addMarer(pos){
+        var marker = new google.maps.Marker({
+            map: map,
+            position: pos,
+//            title: 'Hello World!'
+        });
+        }
+    }
+    $( document ).ready(function() {
+        initMap();
+    });
+
+//    window.onload = function() {
+//        initMap();
+//
+//    };
+
+
+
+</script>
